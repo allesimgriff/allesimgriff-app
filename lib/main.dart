@@ -72,9 +72,9 @@ class _StartseiteState extends State<Startseite> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Fehler beim Laden: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler beim Laden: $e')),
+        );
       }
     }
   }
@@ -172,17 +172,12 @@ class _StartseiteState extends State<Startseite> {
     try {
       final imageData = await _prepareImageData();
       final fileExtension = _getFileExtension();
-
-      final fileName =
-          '${eintragId}_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+      
+      final fileName = '${eintragId}_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
 
       await supabase.storage
           .from('fotos')
-          .upload(
-            fileName,
-            imageData,
-            fileOptions: const FileOptions(upsert: true),
-          );
+          .upload(fileName, imageData, fileOptions: const FileOptions(upsert: true));
 
       final publicUrl = supabase.storage.from('fotos').getPublicUrl(fileName);
 
@@ -199,15 +194,15 @@ class _StartseiteState extends State<Startseite> {
       _ladeEintraege();
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Bild hochgeladen!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bild hochgeladen!')),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler: $e')),
+        );
       }
     } finally {
       setState(() => _uploadLaeuft = false);
@@ -237,15 +232,15 @@ class _StartseiteState extends State<Startseite> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Eintrag gespeichert!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Eintrag gespeichert!')),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler: $e')),
+        );
       }
     } finally {
       setState(() => _uploadLaeuft = false);
@@ -259,9 +254,9 @@ class _StartseiteState extends State<Startseite> {
       _ladeEintraege();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Fehler beim Löschen: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler beim Löschen: $e')),
+        );
       }
     }
   }
@@ -329,15 +324,15 @@ class _StartseiteState extends State<Startseite> {
         });
         _ladeSammlungen();
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Sammlung erstellt!')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Sammlung erstellt!')),
+          );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Fehler: $e')),
+          );
         }
       }
     }
@@ -414,15 +409,15 @@ class _StartseiteState extends State<Startseite> {
         _ladeEintraege();
 
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Sammlung erstellt!')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Sammlung erstellt!')),
+          );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Fehler: $e')),
+          );
         }
       }
     }
@@ -510,15 +505,15 @@ class _StartseiteState extends State<Startseite> {
         });
 
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Bilder hinzugefügt!')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Bilder hinzugefügt!')),
+          );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Fehler: $e')),
+          );
         }
       }
     }
@@ -736,7 +731,7 @@ class _StartseiteState extends State<Startseite> {
                                 children: [
                                   if (hatFoto)
                                     Image.network(
-                                      '$fotoUrl?t=${DateTime.now().millisecondsSinceEpoch}',
+                                      fotoUrl,
                                       fit: BoxFit.cover,
                                       errorBuilder: (c, o, s) =>
                                           const Icon(Icons.broken_image),
@@ -781,9 +776,9 @@ class _StartseiteState extends State<Startseite> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler: $e')),
+        );
       }
     }
   }
@@ -1052,7 +1047,7 @@ class _StartseiteState extends State<Startseite> {
                                 color: Colors.grey[200],
                                 child: hatFoto
                                     ? Image.network(
-                                        '$fotoUrl?t=${DateTime.now().millisecondsSinceEpoch}',
+                                        fotoUrl,
                                         fit: BoxFit.cover,
                                         errorBuilder: (c, o, s) => const Icon(
                                           Icons.broken_image,
