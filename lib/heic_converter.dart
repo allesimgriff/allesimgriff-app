@@ -1,6 +1,6 @@
-@JS()
-library heic_converter;
-
+// Conditional export - wählt Implementation basierend auf Plattform
+export 'heic_converter_stub.dart'
+    if (dart.library.html) 'heic_converter_web.dart';
 import 'dart:js_interop';
 import 'dart:js_util' as js_util;
 import 'dart:typed_data';

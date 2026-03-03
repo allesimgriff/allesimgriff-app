@@ -10,7 +10,7 @@ import 'heic_converter.dart';
 const supabaseUrl = 'https://quptrocxksdqkvcfgzvc.supabase.co';
 const supabaseKey = 'sb_publishable_eR8hYowZBrevF0ywKwQLzA_d5xUmOlH';
 
-// MYPOSTER Affiliate Link (wird nach Genehmigung ersetzt)
+// MYPOSTER Affiliate Link
 const myposterAffiliateLink = 'https://www.myposter.de';
 
 void main() async {
@@ -124,7 +124,12 @@ class _StartseiteState extends State<Startseite> {
         final jpgData = await convertHeicToJpg(_ausgewaehltesBildBytes!);
         return jpgData;
       } catch (e) {
-        throw Exception('HEIC Konvertierung fehlgeschlagen: $e');
+        // HEIC nicht unterstützt - zeige hilfreiche Meldung
+        throw Exception(
+          'HEIC wird im Browser nicht unterstützt. '
+          'Bitte verwenden Sie JPG oder PNG. '
+          'iPhone: Einstellungen → Kamera → Formate → "Kompatibelste"',
+        );
       }
     }
 
@@ -144,7 +149,6 @@ class _StartseiteState extends State<Startseite> {
     setState(() => _uploadLaeuft = true);
 
     try {
-      // Bilddaten vorbereiten (HEIC konvertieren falls nötig)
       final imageData = await _prepareImageData();
       final fileExtension = _getFileExtension();
 
@@ -182,7 +186,7 @@ class _StartseiteState extends State<Startseite> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Fehler beim Upload: $e')));
+        ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
       }
     } finally {
       setState(() => _uploadLaeuft = false);
@@ -377,7 +381,7 @@ class _StartseiteState extends State<Startseite> {
               'reihenfolge': _ausgewaehlteBilder.length,
             });
           } catch (_) {
-            // Bild ist schon in der Sammlung, ignorieren
+            // Bild ist schon in der Sammlung
           }
         }
 
@@ -389,9 +393,9 @@ class _StartseiteState extends State<Startseite> {
         _ladeEintraege();
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Sammlung mit Bildern erstellt!')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Sammlung erstellt!')));
         }
       } catch (e) {
         if (mounted) {
@@ -476,7 +480,7 @@ class _StartseiteState extends State<Startseite> {
               'reihenfolge': _ausgewaehlteBilder.length,
             });
           } catch (_) {
-            // Bild ist schon in der Sammlung, ignorieren
+            // Bild ist schon in der Sammlung
           }
         }
 
@@ -485,9 +489,9 @@ class _StartseiteState extends State<Startseite> {
         });
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Bilder zur Sammlung hinzugefügt!')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Bilder hinzugefügt!')));
         }
       } catch (e) {
         if (mounted) {
@@ -711,7 +715,7 @@ class _StartseiteState extends State<Startseite> {
                                 children: [
                                   if (hatFoto)
                                     Image.network(
-                                      fotoUrl,
+                                      '$fotoUrl?t=${DateTime.now().millisecondsSinceEpoch}',
                                       fit: BoxFit.cover,
                                       errorBuilder: (c, o, s) =>
                                           const Icon(Icons.broken_image),
