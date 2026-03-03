@@ -106,8 +106,19 @@ class _StartseiteState extends State<Startseite> {
 
     try {
       final file = File(_ausgewaehltesBildPfad!);
+
+      // Original-Dateierweiterung behalten (jpg, png, webp, heic, etc.)
+      final fileExtension = _ausgewaehltesBildPfad!
+          .split('.')
+          .last
+          .toLowerCase();
+      final validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic'];
+      final finalExtension = validExtensions.contains(fileExtension)
+          ? fileExtension
+          : 'jpg';
+
       final fileName =
-          '${eintragId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          '${eintragId}_${DateTime.now().millisecondsSinceEpoch}.$finalExtension';
 
       await supabase.storage
           .from('fotos')
@@ -1044,5 +1055,12 @@ class _StartseiteState extends State<Startseite> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controllerTitel.dispose();
+    _controllerBeschreibung.dispose();
+    super.dispose();
   }
 }
