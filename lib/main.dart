@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
+import 'dart:typed_data';
+import 'heic_converter.dart';
 
 // Supabase Konfiguration
 const supabaseUrl = 'https://quptrocxksdqkvcfgzvc.supabase.co';
@@ -46,6 +48,8 @@ class _StartseiteState extends State<Startseite> {
   Set<int> _ausgewaehlteBilder = {};
   bool _isLoading = true;
   String? _ausgewaehltesBildPfad;
+  Uint8List? _ausgewaehltesBildBytes;
+  String? _ausgewaehltesBildExtension;
   bool _uploadLaeuft = false;
 
   @override
@@ -92,37 +96,68 @@ class _StartseiteState extends State<Startseite> {
   Future<void> _bildAuswaehlen() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.image,
+      withData: true,
     );
     if (result != null) {
+      final file = result.files.single;
       setState(() {
-        _ausgewaehltesBildPfad = result.files.single.path;
+        _ausgewaehltesBildPfad = file.path;
+        _ausgewaehltesBildBytes = file.bytes;
+        _ausgewaehltesBildExtension = file.extension?.toLowerCase();
       });
     }
   }
 
+  Future<Uint8List> _prepareImageData() async {
+    if (_ausgewaehltesBildBytes == null) {
+      throw Exception('Keine Bilddaten vorhanden');
+    }
+
+    // HEIC zu JPG konvertieren
+    if (_ausgewaehltesBildExtension == 'heic') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Konvertiere HEIC zu JPG...')),
+        );
+      }
+      try {
+        final jpgData = await convertHeicToJpg(_ausgewaehltesBildBytes!);
+        return jpgData;
+      } catch (e) {
+        throw Exception('HEIC Konvertierung fehlgeschlagen: $e');
+      }
+    }
+
+    // Andere Formate direkt verwenden
+    return _ausgewaehltesBildBytes!;
+  }
+
+  String _getFileExtension() {
+    if (_ausgewaehltesBildExtension == 'heic') {
+      return 'jpg';
+    }
+    return _ausgewaehltesBildExtension ?? 'jpg';
+  }
+
   Future<void> _bildHochladen(String eintragId) async {
-    if (_ausgewaehltesBildPfad == null) return;
+    if (_ausgewaehltesBildBytes == null) return;
     setState(() => _uploadLaeuft = true);
 
     try {
-      final file = File(_ausgewaehltesBildPfad!);
-
-      // Original-Dateierweiterung behalten (jpg, png, webp, heic, etc.)
-      final fileExtension = _ausgewaehltesBildPfad!
-          .split('.')
-          .last
-          .toLowerCase();
-      final validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic'];
-      final finalExtension = validExtensions.contains(fileExtension)
-          ? fileExtension
-          : 'jpg';
+      // Bilddaten vorbereiten (HEIC konvertieren falls nötig)
+      final imageData = await _prepareImageData();
+      final fileExtension = _getFileExtension();
 
       final fileName =
-          '${eintragId}_${DateTime.now().millisecondsSinceEpoch}.$finalExtension';
+          '${eintragId}_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
 
       await supabase.storage
           .from('fotos')
-          .upload(fileName, file, fileOptions: const FileOptions(upsert: true));
+          .upload(
+            fileName,
+            imageData,
+            fileOptions: const FileOptions(upsert: true),
+          );
 
       final publicUrl = supabase.storage.from('fotos').getPublicUrl(fileName);
 
@@ -131,7 +166,11 @@ class _StartseiteState extends State<Startseite> {
           .update({'foto_url': publicUrl})
           .eq('id', int.parse(eintragId));
 
-      setState(() => _ausgewaehltesBildPfad = null);
+      setState(() {
+        _ausgewaehltesBildPfad = null;
+        _ausgewaehltesBildBytes = null;
+        _ausgewaehltesBildExtension = null;
+      });
       _ladeEintraege();
 
       if (mounted) {
@@ -166,8 +205,11 @@ class _StartseiteState extends State<Startseite> {
       _controllerTitel.clear();
       _controllerBeschreibung.clear();
 
-      await _bildHochladen(eintragId);
-      _ladeEintraege();
+      if (_ausgewaehltesBildBytes != null) {
+        await _bildHochladen(eintragId);
+      } else {
+        _ladeEintraege();
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -884,15 +926,18 @@ class _StartseiteState extends State<Startseite> {
                         label: Text(
                           _ausgewaehltesBildPfad == null
                               ? 'Bild auswählen'
-                              : 'Bild gewählt',
+                              : 'Bild gewählt (${_ausgewaehltesBildExtension?.toUpperCase()})',
                         ),
                       ),
                     ),
                     if (_ausgewaehltesBildPfad != null)
                       IconButton(
                         icon: const Icon(Icons.check, color: Colors.green),
-                        onPressed: () =>
-                            setState(() => _ausgewaehltesBildPfad = null),
+                        onPressed: () => setState(() {
+                          _ausgewaehltesBildPfad = null;
+                          _ausgewaehltesBildBytes = null;
+                          _ausgewaehltesBildExtension = null;
+                        }),
                       ),
                   ],
                 ),
@@ -982,7 +1027,7 @@ class _StartseiteState extends State<Startseite> {
                                 color: Colors.grey[200],
                                 child: hatFoto
                                     ? Image.network(
-                                        fotoUrl,
+                                        '$fotoUrl?t=${DateTime.now().millisecondsSinceEpoch}',
                                         fit: BoxFit.cover,
                                         errorBuilder: (c, o, s) => const Icon(
                                           Icons.broken_image,
