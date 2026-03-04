@@ -102,50 +102,6 @@ class _StartseiteState extends State<Startseite> {
       final file = result.files.single;
       final ext = file.extension?.toLowerCase();
 
-      // HEIC BLOCKIEREN VOR UPLOAD
-      if (ext == 'heic' || ext == 'heif') {
-        if (mounted) {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Format nicht unterstützt'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'HEIC-Bilder werden im Browser nicht unterstützt.',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Bitte verwenden Sie:'),
-                  const Text('• JPG'),
-                  const Text('• PNG'),
-                  const Text('• WebP'),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Tipp für iPhone-Nutzer:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const Text(
-                    'Einstellungen → Kamera → Formate → "Kompatibelste"',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Verstanden'),
-                ),
-              ],
-            ),
-          );
-        }
-        return;
-      }
-
-      // Unterstütztes Format - speichern
       setState(() {
         _ausgewaehltesBildPfad = file.path;
         _ausgewaehltesBildBytes = file.bytes;
