@@ -481,56 +481,260 @@ class _StartseiteState extends State<Startseite> {
     }
   }
 
-  Future<Set<int>?> _showEintraegeAuswahlDialog() async {
+  Future<Set<int>?> _showEintraegeAuswahlDialog(
+    Set<int> existingInCollection,
+  ) async {
     final selectedIds = <int>{};
     return showDialog<Set<int>?>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setSel) => AlertDialog(
-          title: const Text('Einträge zur Sammlung hinzufügen'),
-          content: SizedBox(
-            width: 400,
-            height: 400,
-            child: _eintraege.isEmpty
-                ? const Center(child: Text('Keine Einträge vorhanden.'))
-                : ListView.builder(
-                    itemCount: _eintraege.length,
-                    itemBuilder: (context, index) {
-                      final e = _eintraege[index];
-                      final id = e['id'] as int;
-                      final titel =
-                          (e['text'] ?? 'Ohne Titel').toString();
-                      final sel = selectedIds.contains(id);
-                      return CheckboxListTile(
-                        title: Text(titel),
-                        value: sel,
-                        onChanged: (_) {
-                          if (sel) {
-                            selectedIds.remove(id);
-                          } else {
-                            selectedIds.add(id);
-                          }
-                          setSel(() {});
-                        },
-                      );
-                    },
-                  ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, null),
-              child: const Text('Abbrechen'),
-            ),
-            ElevatedButton(
-              onPressed: selectedIds.isEmpty
-                  ? null
-                  : () => Navigator.pop(
-                        dialogContext,
-                        Set<int>.from(selectedIds),
+        builder: (context, setSel) => Dialog(
+          child: SizedBox(
+            width: 720,
+            height: 560,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Einträge zur Sammlung hinzufügen',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-              child: const Text('Hinzufügen'),
+                      if (selectedIds.isNotEmpty)
+                        Text(
+                          '${selectedIds.length} ausgewählt',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      const SizedBox(width: 12),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(dialogContext, null),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: _eintraege.isEmpty
+                      ? const Center(
+                          child: Text('Keine Einträge vorhanden.'),
+                        )
+                      : GridView.builder(
+                          padding: const EdgeInsets.all(16),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 0.85,
+                          ),
+                          itemCount: _eintraege.length,
+                          itemBuilder: (context, index) {
+                            final e = _eintraege[index];
+                            final id = e['id'] as int;
+                            final titel =
+                                (e['text'] ?? 'Ohne Titel').toString();
+                            final beschreibung =
+                                (e['beschreibung'] ?? '').toString().trim();
+                            final url =
+                                (e['foto_url'] ?? '').toString().trim();
+                            final hatBild = url.isNotEmpty;
+                            final inSammlung =
+                                existingInCollection.contains(id);
+                            final sel = selectedIds.contains(id);
+                            return Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: inSammlung
+                                    ? null
+                                    : () {
+                                        if (sel) {
+                                          selectedIds.remove(id);
+                                        } else {
+                                          selectedIds.add(id);
+                                        }
+                                        setSel(() {});
+                                      },
+                                borderRadius: BorderRadius.circular(12),
+                                child: Stack(
+                                  children: [
+                                    Card(
+                                      clipBehavior: Clip.antiAlias,
+                                      elevation: sel ? 4 : 1,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                        side: sel
+                                            ? BorderSide(
+                                                color: Theme.of(context)
+                                                    .colorScheme.primary,
+                                                width: 3,
+                                              )
+                                            : BorderSide.none,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          Expanded(
+                                            child: hatBild
+                                                ? Image.network(
+                                                    url,
+                                                    fit: BoxFit.cover,
+                                                    width: double.infinity,
+                                                    loadingBuilder: (c, child,
+                                                            lp) =>
+                                                        lp == null
+                                                            ? child
+                                                            : const Center(
+                                                                child:
+                                                                    CircularProgressIndicator(),
+                                                              ),
+                                                    errorBuilder: (_, __,
+                                                            ___) =>
+                                                        const Center(
+                                                          child: Icon(
+                                                            Icons.broken_image,
+                                                            size: 40,
+                                                            color: Colors
+                                                                .grey,
+                                                          ),
+                                                        ),
+                                                  )
+                                                : Container(
+                                                    color: Colors.blue[50],
+                                                    child: const Center(
+                                                      child: Icon(
+                                                        Icons.description,
+                                                        size: 40,
+                                                        color: Colors
+                                                            .blue,
+                                                      ),
+                                                    ),
+                                                  ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets
+                                                .symmetric(
+                                              horizontal: 8,
+                                              vertical: 6,
+                                            ),
+                                            color: Colors.black87,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  titel,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight:
+                                                        FontWeight.bold,
+                                                    fontSize: 12,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                                if (beschreibung
+                                                    .isNotEmpty)
+                                                  Text(
+                                                    beschreibung,
+                                                    style: TextStyle(
+                                                      color: Colors.white
+                                                          .withOpacity(0.9),
+                                                      fontSize: 11,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (inSammlung)
+                                      Positioned.fill(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.black54,
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: const Center(
+                                            child: Chip(
+                                              label: Text(
+                                                'In Sammlung',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              backgroundColor:
+                                                  Colors.grey,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    if (sel && !inSammlung)
+                                      Positioned(
+                                        top: 6,
+                                        right: 6,
+                                        child: Icon(
+                                          Icons.check_circle,
+                                          color: Theme.of(context)
+                                              .colorScheme.primary,
+                                          size: 28,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () =>
+                            Navigator.pop(dialogContext, null),
+                        child: const Text('Abbrechen'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: selectedIds.isEmpty
+                            ? null
+                            : () => Navigator.pop(
+                                  dialogContext,
+                                  Set<int>.from(selectedIds),
+                                ),
+                        child: const Text('Hinzufügen'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -677,15 +881,17 @@ class _StartseiteState extends State<Startseite> {
                           children: [
                             ElevatedButton.icon(
                               onPressed: () async {
-                                final selectedIds =
-                                    await _showEintraegeAuswahlDialog();
-                                if (selectedIds == null ||
-                                    selectedIds.isEmpty) return;
                                 final sammlungId =
                                     sammlung['id'] as int;
                                 final existingIds = bilder
                                     .map((e) => e['id'] as int)
                                     .toSet();
+                                final selectedIds =
+                                    await _showEintraegeAuswahlDialog(
+                                      existingIds,
+                                    );
+                                if (selectedIds == null ||
+                                    selectedIds.isEmpty) return;
                                 final idsToAdd = selectedIds
                                     .where((id) => !existingIds.contains(id))
                                     .toList();
