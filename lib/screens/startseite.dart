@@ -492,10 +492,18 @@ class _StartseiteState extends State<Startseite> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setSel) {
+          // Filter rules: single source = stored entry date only.
+          // Use ONLY field "datum" (table eintrage). Do NOT use title, text, filename, or created_at.
+          // Jahr → year from datum; Monat → month from datum; Tag → day from datum.
+          // Default (all null) = show all entries. Filters combine: Jahr then Monat then Tag.
+          DateTime? _datumFromEntry(Map<String, dynamic> e) {
+            final datumStr = e['datum']?.toString() ?? '';
+            return DateTime.tryParse(datumStr);
+          }
+
           List<Map<String, dynamic>> filteredEintraege = _eintraege
               .where((e) {
-                final datumStr = e['datum']?.toString() ?? '';
-                final d = DateTime.tryParse(datumStr);
+                final d = _datumFromEntry(e);
                 if (d == null) {
                   return filterJahr == null &&
                       filterMonat == null &&
@@ -509,7 +517,7 @@ class _StartseiteState extends State<Startseite> {
               .toList();
 
           final jahre = _eintraege
-              .map((e) => DateTime.tryParse(e['datum']?.toString() ?? ''))
+              .map(_datumFromEntry)
               .whereType<DateTime>()
               .map((d) => d.year)
               .toSet()
@@ -519,11 +527,11 @@ class _StartseiteState extends State<Startseite> {
           final eintraegeNachJahr = filterJahr == null
               ? _eintraege
               : _eintraege.where((e) {
-                  final d = DateTime.tryParse(e['datum']?.toString() ?? '');
+                  final d = _datumFromEntry(e);
                   return d != null && d.year == filterJahr;
                 }).toList();
           final monate = eintraegeNachJahr
-              .map((e) => DateTime.tryParse(e['datum']?.toString() ?? ''))
+              .map(_datumFromEntry)
               .whereType<DateTime>()
               .map((d) => d.month)
               .toSet()
@@ -533,11 +541,11 @@ class _StartseiteState extends State<Startseite> {
           final eintraegeNachJahrMonat = filterMonat == null
               ? eintraegeNachJahr
               : eintraegeNachJahr.where((e) {
-                  final d = DateTime.tryParse(e['datum']?.toString() ?? '');
+                  final d = _datumFromEntry(e);
                   return d != null && d.month == filterMonat;
                 }).toList();
           final tage = eintraegeNachJahrMonat
-              .map((e) => DateTime.tryParse(e['datum']?.toString() ?? ''))
+              .map(_datumFromEntry)
               .whereType<DateTime>()
               .map((d) => d.day)
               .toSet()
@@ -604,7 +612,7 @@ class _StartseiteState extends State<Startseite> {
                           items: [
                             const DropdownMenuItem<int?>(
                               value: null,
-                              child: Text('Alle'),
+                              child: Text('Jahr'),
                             ),
                             ...jahre.map(
                               (j) => DropdownMenuItem<int?>(
@@ -628,7 +636,7 @@ class _StartseiteState extends State<Startseite> {
                           items: [
                             const DropdownMenuItem<int?>(
                               value: null,
-                              child: Text('Alle'),
+                              child: Text('Monat'),
                             ),
                             ...monate.map(
                               (m) => DropdownMenuItem<int?>(
@@ -651,7 +659,7 @@ class _StartseiteState extends State<Startseite> {
                           items: [
                             const DropdownMenuItem<int?>(
                               value: null,
-                              child: Text('Alle'),
+                              child: Text('Tag'),
                             ),
                             ...tage.map(
                               (d) => DropdownMenuItem<int?>(
