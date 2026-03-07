@@ -811,46 +811,42 @@ class _StartseiteState extends State<Startseite> {
                   ],
                 ),
               ),
+              if (beschreibung != null && beschreibung.trim().isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: SingleChildScrollView(
+                      child: Text(
+                        beschreibung,
+                        style: const TextStyle(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Image.network(
-                          cleanUrl,
-                          fit: BoxFit.contain,
-                          loadingBuilder: (c, child, lp) => lp == null
-                              ? child
-                              : const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                          errorBuilder: (_, __, ___) => const Center(
-                            child: Icon(
-                              Icons.broken_image,
-                              color: Colors.white,
-                              size: 60,
-                            ),
+                  child: Image.network(
+                    cleanUrl,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (c, child, lp) => lp == null
+                        ? child
+                        : const Center(
+                            child: CircularProgressIndicator(),
                           ),
-                        ),
+                    errorBuilder: (_, __, ___) => const Center(
+                      child: Icon(
+                        Icons.broken_image,
+                        color: Colors.white,
+                        size: 60,
                       ),
-                      if (beschreibung != null &&
-                          beschreibung.trim().isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: SingleChildScrollView(
-                              child: Text(
-                                beschreibung,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
                 ),
               ),
