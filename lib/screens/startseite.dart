@@ -411,7 +411,7 @@ class _StartseiteState extends State<Startseite> {
 
     final result = await showDialog<Map<String, dynamic>?>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Zur Sammlung hinzufügen'),
         content: SizedBox(
           width: 420,
@@ -429,8 +429,10 @@ class _StartseiteState extends State<Startseite> {
                   title: Text((s['name'] ?? '').toString()),
                   subtitle:
                       Text(_formatDatum((s['created_at'] ?? '').toString())),
-                  onTap: () =>
-                      Navigator.pop(context, {'type': 'exist', 'id': s['id']}),
+                  onTap: () => Navigator.pop(
+                    dialogContext,
+                    <String, dynamic>{'type': 'exist', 'id': s['id']},
+                  ),
                 ),
               ),
               const Divider(),
@@ -439,14 +441,14 @@ class _StartseiteState extends State<Startseite> {
                   'Neue Sammlung...',
                   style: TextStyle(color: Colors.green),
                 ),
-                onTap: () => Navigator.pop(context, {'type': 'new'}),
+                onTap: () => Navigator.pop(dialogContext, {'type': 'new'}),
               ),
             ],
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, null),
+            onPressed: () => Navigator.pop(dialogContext, null),
             child: const Text('Abbrechen'),
           ),
         ],
