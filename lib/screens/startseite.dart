@@ -485,63 +485,210 @@ class _StartseiteState extends State<Startseite> {
     Set<int> existingInCollection,
   ) async {
     final selectedIds = <int>{};
+    int? filterJahr;
+    int? filterMonat;
+    int? filterTag;
     return showDialog<Set<int>?>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setSel) => Dialog(
-          child: SizedBox(
-            width: 720,
-            height: 560,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
-                  child: Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'Einträge zur Sammlung hinzufügen',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+        builder: (context, setSel) {
+          List<Map<String, dynamic>> filteredEintraege = _eintraege
+              .where((e) {
+                final datumStr = e['datum']?.toString() ?? '';
+                final d = DateTime.tryParse(datumStr);
+                if (d == null) {
+                  return filterJahr == null &&
+                      filterMonat == null &&
+                      filterTag == null;
+                }
+                if (filterJahr != null && d.year != filterJahr) return false;
+                if (filterMonat != null && d.month != filterMonat) return false;
+                if (filterTag != null && d.day != filterTag) return false;
+                return true;
+              })
+              .toList();
+
+          final jahre = _eintraege
+              .map((e) => DateTime.tryParse(e['datum']?.toString() ?? ''))
+              .whereType<DateTime>()
+              .map((d) => d.year)
+              .toSet()
+              .toList()
+            ..sort((a, b) => b.compareTo(a));
+
+          final eintraegeNachJahr = filterJahr == null
+              ? _eintraege
+              : _eintraege.where((e) {
+                  final d = DateTime.tryParse(e['datum']?.toString() ?? '');
+                  return d != null && d.year == filterJahr;
+                }).toList();
+          final monate = eintraegeNachJahr
+              .map((e) => DateTime.tryParse(e['datum']?.toString() ?? ''))
+              .whereType<DateTime>()
+              .map((d) => d.month)
+              .toSet()
+              .toList()
+            ..sort();
+
+          final eintraegeNachJahrMonat = filterMonat == null
+              ? eintraegeNachJahr
+              : eintraegeNachJahr.where((e) {
+                  final d = DateTime.tryParse(e['datum']?.toString() ?? '');
+                  return d != null && d.month == filterMonat;
+                }).toList();
+          final tage = eintraegeNachJahrMonat
+              .map((e) => DateTime.tryParse(e['datum']?.toString() ?? ''))
+              .whereType<DateTime>()
+              .map((d) => d.day)
+              .toSet()
+              .toList()
+            ..sort();
+
+          return Dialog(
+            child: SizedBox(
+              width: 720,
+              height: 560,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Einträge zur Sammlung hinzufügen',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                      if (selectedIds.isNotEmpty)
-                        Text(
-                          '${selectedIds.length} ausgewählt',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w500,
+                        if (selectedIds.isNotEmpty)
+                          Text(
+                            '${selectedIds.length} ausgewählt',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
+                        const SizedBox(width: 12),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () =>
+                              Navigator.pop(dialogContext, null),
                         ),
-                      const SizedBox(width: 12),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(dialogContext, null),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const Divider(height: 1),
-                Expanded(
-                  child: _eintraege.isEmpty
-                      ? const Center(
-                          child: Text('Keine Einträge vorhanden.'),
-                        )
-                      : GridView.builder(
-                          padding: const EdgeInsets.all(16),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 0.85,
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      children: [
+                        const Text(
+                          'Filter:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
                           ),
-                          itemCount: _eintraege.length,
-                          itemBuilder: (context, index) {
-                            final e = _eintraege[index];
+                        ),
+                        const SizedBox(width: 12),
+                        DropdownButton<int?>(
+                          value: filterJahr,
+                          hint: const Text('Jahr'),
+                          isExpanded: false,
+                          items: [
+                            const DropdownMenuItem<int?>(
+                              value: null,
+                              child: Text('Alle'),
+                            ),
+                            ...jahre.map(
+                              (j) => DropdownMenuItem<int?>(
+                                value: j,
+                                child: Text('$j'),
+                              ),
+                            ),
+                          ],
+                          onChanged: (v) {
+                            filterJahr = v;
+                            filterMonat = null;
+                            filterTag = null;
+                            setSel(() {});
+                          },
+                        ),
+                        const SizedBox(width: 12),
+                        DropdownButton<int?>(
+                          value: filterMonat,
+                          hint: const Text('Monat'),
+                          isExpanded: false,
+                          items: [
+                            const DropdownMenuItem<int?>(
+                              value: null,
+                              child: Text('Alle'),
+                            ),
+                            ...monate.map(
+                              (m) => DropdownMenuItem<int?>(
+                                value: m,
+                                child: Text('$m'),
+                              ),
+                            ),
+                          ],
+                          onChanged: (v) {
+                            filterMonat = v;
+                            filterTag = null;
+                            setSel(() {});
+                          },
+                        ),
+                        const SizedBox(width: 12),
+                        DropdownButton<int?>(
+                          value: filterTag,
+                          hint: const Text('Tag'),
+                          isExpanded: false,
+                          items: [
+                            const DropdownMenuItem<int?>(
+                              value: null,
+                              child: Text('Alle'),
+                            ),
+                            ...tage.map(
+                              (d) => DropdownMenuItem<int?>(
+                                value: d,
+                                child: Text('$d'),
+                              ),
+                            ),
+                          ],
+                          onChanged:
+                              (filterJahr != null || filterMonat != null)
+                                  ? (v) {
+                                      filterTag = v;
+                                      setSel(() {});
+                                    }
+                                  : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: filteredEintraege.isEmpty
+                        ? const Center(
+                            child: Text('Keine Einträge vorhanden.'),
+                          )
+                        : GridView.builder(
+                            padding: const EdgeInsets.all(16),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 0.85,
+                            ),
+                            itemCount: filteredEintraege.length,
+                            itemBuilder: (context, index) {
+                              final e = filteredEintraege[index];
                             final id = e['id'] as int;
                             final titel =
                                 (e['text'] ?? 'Ohne Titel').toString();
@@ -735,7 +882,8 @@ class _StartseiteState extends State<Startseite> {
               ],
             ),
           ),
-        ),
+        );
+    },
       ),
     );
   }
