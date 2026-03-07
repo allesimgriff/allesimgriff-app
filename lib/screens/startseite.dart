@@ -481,6 +481,61 @@ class _StartseiteState extends State<Startseite> {
     }
   }
 
+  Future<Set<int>?> _showEintraegeAuswahlDialog() async {
+    final selectedIds = <int>{};
+    return showDialog<Set<int>?>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setSel) => AlertDialog(
+          title: const Text('Einträge zur Sammlung hinzufügen'),
+          content: SizedBox(
+            width: 400,
+            height: 400,
+            child: _eintraege.isEmpty
+                ? const Center(child: Text('Keine Einträge vorhanden.'))
+                : ListView.builder(
+                    itemCount: _eintraege.length,
+                    itemBuilder: (context, index) {
+                      final e = _eintraege[index];
+                      final id = e['id'] as int;
+                      final titel =
+                          (e['text'] ?? 'Ohne Titel').toString();
+                      final sel = selectedIds.contains(id);
+                      return CheckboxListTile(
+                        title: Text(titel),
+                        value: sel,
+                        onChanged: (_) {
+                          if (sel) {
+                            selectedIds.remove(id);
+                          } else {
+                            selectedIds.add(id);
+                          }
+                          setSel(() {});
+                        },
+                      );
+                    },
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, null),
+              child: const Text('Abbrechen'),
+            ),
+            ElevatedButton(
+              onPressed: selectedIds.isEmpty
+                  ? null
+                  : () => Navigator.pop(
+                        dialogContext,
+                        Set<int>.from(selectedIds),
+                      ),
+              child: const Text('Hinzufügen'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _sammlungenAnzeigen() {
     showDialog(
       context: context,
@@ -620,6 +675,79 @@ class _StartseiteState extends State<Startseite> {
                         ),
                         Row(
                           children: [
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                final selectedIds =
+                                    await _showEintraegeAuswahlDialog();
+                                if (selectedIds == null ||
+                                    selectedIds.isEmpty) return;
+                                final sammlungId =
+                                    sammlung['id'] as int;
+                                final existingIds = bilder
+                                    .map((e) => e['id'] as int)
+                                    .toSet();
+                                final idsToAdd = selectedIds
+                                    .where((id) => !existingIds.contains(id))
+                                    .toList();
+                                if (idsToAdd.isEmpty) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Alle ausgewählten Einträge sind bereits in der Sammlung.',
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                try {
+                                  await SupabaseService.instance
+                                      .bilderZuSammlungHinzufuegen(
+                                    sammlungId,
+                                    idsToAdd,
+                                  );
+                                  final newBilder =
+                                      await SupabaseService.instance
+                                          .ladeSammlungBilder(sammlungId);
+                                  bilder
+                                    ..clear()
+                                    ..addAll(newBilder);
+                                  bildListe
+                                    ..clear()
+                                    ..addAll(
+                                      newBilder
+                                          .map((e) => (e['foto_url'] ?? '')
+                                              .toString()
+                                              .trim())
+                                          .where((u) => u.isNotEmpty)
+                                          .map((u) => {'url': u})
+                                          .toList(),
+                                    );
+                                  setStateDialog(() {});
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Bilder zur Sammlung hinzugefügt.',
+                                      ),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(
+                                    SnackBar(
+                                      content: Text('Fehler: $e'),
+                                    ),
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.add_photo_alternate),
+                              label: const Text('+ Bilder hinzufügen'),
+                            ),
+                            const SizedBox(width: 8),
                             ElevatedButton.icon(
                               onPressed: bildListe.isEmpty
                                   ? null
