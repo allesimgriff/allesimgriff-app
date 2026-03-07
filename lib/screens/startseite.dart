@@ -601,128 +601,201 @@ class _StartseiteState extends State<Startseite> {
           child: SizedBox(
             width: 1000,
             height: 720,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        (sammlung['name'] ?? '').toString(),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+            child: StatefulBuilder(
+              builder: (context, setStateDialog) => Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          (sammlung['name'] ?? '').toString(),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Row(
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: bildListe.isEmpty
-                                ? null
-                                : () => _fotobuchBestellen(bildListe),
-                            icon: const Icon(Icons.shopping_cart),
-                            label: const Text('Bestellen'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
+                        Row(
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: bildListe.isEmpty
+                                  ? null
+                                  : () => _fotobuchBestellen(bildListe),
+                              icon: const Icon(Icons.shopping_cart),
+                              label: const Text('Bestellen'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: bilder.isEmpty
-                      ? const Center(child: Text('Keine Bilder'))
-                      : GridView.builder(
-                          padding: const EdgeInsets.all(16),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 1,
-                          ),
-                          itemCount: bilder.length,
-                          itemBuilder: (c, i) {
-                            final e = bilder[i];
-                            final titel =
-                                (e['text'] ?? 'Ohne Titel').toString();
-                            final url = (e['foto_url'] ?? '').toString().trim();
-                            final hat = url.isNotEmpty;
-
-                            return Card(
-                              clipBehavior: Clip.antiAlias,
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: InkWell(
-                                onTap: hat
-                                    ? () => _bildAnzeigen(url, titel)
-                                    : null,
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    if (hat)
-                                      Image.network(
-                                        url,
-                                        fit: BoxFit.cover,
-                                        loadingBuilder: (c, child, lp) =>
-                                            lp == null
-                                                ? child
-                                                : const Center(
-                                                    child:
-                                                        CircularProgressIndicator(),
-                                                  ),
-                                        errorBuilder: (_, __, ___) =>
-                                            const Center(
-                                          child: Icon(Icons.broken_image),
-                                        ),
-                                      )
-                                    else
-                                      Container(
-                                        color: Colors.grey[200],
-                                        child: const Center(
-                                          child: Icon(
-                                            Icons.description,
-                                            size: 40,
-                                          ),
-                                        ),
-                                      ),
-                                    Positioned(
-                                      bottom: 0,
-                                      left: 0,
-                                      right: 0,
-                                      child: Container(
-                                        color: Colors.black54,
-                                        padding: const EdgeInsets.all(6),
-                                        child: Text(
-                                          titel,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 11,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
                         ),
-                ),
-              ],
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: bilder.isEmpty
+                        ? const Center(child: Text('Keine Bilder'))
+                        : GridView.builder(
+                            padding: const EdgeInsets.all(16),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 4,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 1,
+                            ),
+                            itemCount: bilder.length,
+                            itemBuilder: (c, i) {
+                              final e = bilder[i];
+                              final titel =
+                                  (e['text'] ?? 'Ohne Titel').toString();
+                              final url =
+                                  (e['foto_url'] ?? '').toString().trim();
+                              final hat = url.isNotEmpty;
+
+                              return Card(
+                                clipBehavior: Clip.antiAlias,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: InkWell(
+                                  onTap: hat
+                                      ? () => _bildAnzeigen(
+                                            url,
+                                            titel,
+                                            (e['beschreibung'] ?? '')
+                                                .toString(),
+                                          )
+                                      : null,
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      if (hat)
+                                        Image.network(
+                                          url,
+                                          fit: BoxFit.cover,
+                                          loadingBuilder: (c, child, lp) =>
+                                              lp == null
+                                                  ? child
+                                                  : const Center(
+                                                      child:
+                                                          CircularProgressIndicator(),
+                                                    ),
+                                          errorBuilder: (_, __, ___) =>
+                                              const Center(
+                                            child: Icon(Icons.broken_image),
+                                          ),
+                                        )
+                                      else
+                                        Container(
+                                          color: Colors.grey[200],
+                                          child: const Center(
+                                            child: Icon(
+                                              Icons.description,
+                                              size: 40,
+                                            ),
+                                          ),
+                                        ),
+                                      Positioned(
+                                        top: 4,
+                                        right: 4,
+                                        child: IconButton(
+                                          tooltip:
+                                              'Bild aus Sammlung entfernen',
+                                          icon: const Icon(
+                                            Icons.close,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                          style: IconButton.styleFrom(
+                                            backgroundColor:
+                                                Colors.black54.withOpacity(0.6),
+                                            shape: const CircleBorder(),
+                                          ),
+                                          onPressed: () async {
+                                            final ok =
+                                                await showDialog<bool>(
+                                              context: context,
+                                              builder: (_) => AlertDialog(
+                                                title: const Text(
+                                                    'Bild aus Sammlung entfernen?'),
+                                                content: const Text(
+                                                    'Dieses Bild wird nur aus dieser Sammlung entfernt, der Eintrag bleibt erhalten.'),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            context, false),
+                                                    child:
+                                                        const Text('Abbrechen'),
+                                                  ),
+                                                  ElevatedButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            context, true),
+                                                    style: ElevatedButton
+                                                        .styleFrom(
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                    child:
+                                                        const Text('Entfernen'),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+
+                                            if (ok != true) return;
+
+                                            await removeImageFromCollection(
+                                              sammlung['id'] as int,
+                                              e['id'] as int,
+                                            );
+
+                                            setStateDialog(() {
+                                              bilder.removeAt(i);
+                                              bildListe.removeWhere((b) =>
+                                                  (b['url'] ?? '') ==
+                                                  url.trim());
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 0,
+                                        left: 0,
+                                        right: 0,
+                                        child: Container(
+                                          color: Colors.black54,
+                                          padding: const EdgeInsets.all(6),
+                                          child: Text(
+                                            titel,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -855,6 +928,29 @@ class _StartseiteState extends State<Startseite> {
         ),
       ),
     );
+  }
+
+  Future<void> removeImageFromCollection(
+    int sammlungId,
+    int eintragId,
+  ) async {
+    try {
+      await SupabaseService.instance.removeImageFromCollection(
+        sammlungId,
+        eintragId,
+      );
+      await _ladeSammlungen();
+      await _ladeEintraege();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bild aus Sammlung entfernt')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Entfernen: $e')),
+      );
+    }
   }
 
   void _textEintragAnzeigen(String titel, String beschreibung) {

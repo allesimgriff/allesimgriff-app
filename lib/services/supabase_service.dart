@@ -156,6 +156,17 @@ class SupabaseService {
     return bilder;
   }
 
+  Future<void> removeImageFromCollection(
+    int sammlungId,
+    int eintragId,
+  ) async {
+    await _client
+        .from('sammlung_bilder')
+        .delete()
+        .eq('sammlung_id', sammlungId)
+        .eq('eintrag_id', eintragId);
+  }
+
   // --- Storage ---
 
   Future<String> _uploadBytesToStorage({
