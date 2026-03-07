@@ -34,7 +34,7 @@ class EintragCard extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           InkWell(
-            onTap: hatBild && onBildAnzeigen != null ? onBildAnzeigen : null,
+            onTap: onBildAnzeigen,
             child: Container(
               color: hatBild ? Colors.grey[200] : Colors.blue[50],
               child: hatBild
@@ -61,24 +61,7 @@ class EintragCard extends StatelessWidget {
                         ],
                       ),
                     )
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.description,
-                          size: 44,
-                          color: Colors.blue[300],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Nur Text',
-                          style: TextStyle(
-                            color: Colors.blue[700],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
+                  : null,
             ),
           ),
           Positioned(
